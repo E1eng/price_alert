@@ -73,8 +73,8 @@ def main():
                 if is_above and not was_above:
                     msg = (
                         "🚨 MCAP ALERT\n\n"
-                        f"Token: {CONTRACT}\n"
                         f"Market Cap: {fmt_usd(mcap)}\n"
+                        f"Token: {CONTRACT}\n"
                         f"Target: {fmt_usd(target)}\n"
                         + (f"Price: ${price:.10g}\n" if price is not None else "")
                         + "Chain: Robinhood Chain"
