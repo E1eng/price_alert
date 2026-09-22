@@ -1,0 +1,35 @@
+name: Run MCAP Bot
+
+on:
+  workflow_dispatch: # Trigger biar lu bisa nge-run manual dari tombol
+  
+permissions:
+  contents: write # WAJIB: ngasih izin ke bot buat nge-save state.json ke repo lu
+
+jobs:
+  jalanin-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run Python Script
+        run: python bot.py
+
+      - name: Simpan state.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update state.json" && git push)
+          
