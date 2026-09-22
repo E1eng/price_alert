@@ -1,14 +1,20 @@
-aimport os, time, json
+import os, time, json
 from decimal import Decimal
 from pathlib import Path
 import requests
 
-TOKEN = os.environ["8852475575:AAGt46XKv-hvtr9v6OQEm333cnvYCW73_ZM"]
-CHAT_ID = os.environ["8852475575"]
+# Masukkan Token dan Chat ID sebagai string (JANGAN LUPA GANTI TOKENNYA DI BOTFATHER)
+TOKEN = "8852475575:AAGt46XKv-hvtr9v6OQEm333cnvYCW73_ZM" 
+CHAT_ID = "8852475575"
+
 CONTRACT = os.environ.get("TOKEN_ADDRESS", "0x63ee90921eac3c3f87961c17556bb3ebdf2490a9").lower()
-THRESHOLDS = [Decimal(x.strip()) for x in os.environ.get("MCAP_THRESHOLDS", "5000000,10000000,20000000").split(",") if x.strip()]
+
+# Generate otomatis list target dari 800.000 sampai 10.000.000 tiap 100.000
+THRESHOLDS = [Decimal(str(x)) for x in range(800_000, 10_000_000 + 1, 100_000)]
+
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "30"))
 RUN_SECONDS = int(os.environ.get("RUN_SECONDS", "270"))
+
 API = f"https://api.ponsapi.dev/v1/tokens/{CONTRACT}/price"
 STATE_FILE = Path("state.json")
 
@@ -48,6 +54,8 @@ def fmt_usd(x):
 def main():
     state = load_state()
     started = time.time()
+    
+    # Akan berhenti jalan setelah RUN_SECONDS (default 270 detik / 4.5 menit)
     while time.time() - started < RUN_SECONDS:
         try:
             mcap, price = get_price()
@@ -56,6 +64,8 @@ def main():
                 key = str(target)
                 was_above = bool(state["above"].get(key, False))
                 is_above = mcap >= target
+                
+                # Kirim notif kalau mcap naik menembus target, yang sebelumnya belum tembus
                 if is_above and not was_above:
                     msg = (
                         "🚨 MCAP ALERT\n\n"
@@ -66,11 +76,16 @@ def main():
                         + "Chain: Robinhood Chain"
                     )
                     send_telegram(msg)
+                
+                # Update status 
                 state["above"][key] = is_above
             save_state(state)
+            
         except Exception as e:
             print("ERROR:", repr(e))
+            
         time.sleep(POLL_SECONDS)
 
 if __name__ == "__main__":
     main()
+    
