@@ -7,15 +7,15 @@ TOKEN = "8852475575:AAGt46XKv-hvtr9v6OQEm333cnvYCW73_ZM"
 CHAT_ID = "8852475575"
 CONTRACT = os.environ.get("TOKEN_ADDRESS", "0x63ee90921eac3c3f87961c17556bb3ebdf2490a9").lower()
 
-THRESHOLDS = [Decimal(str(x)) for x in range(800_000, 10_000_000 + 1, 100_000)]
+STEP = Decimal("100000") # Kelipatan 100k
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "30"))
 STATE_FILE = Path("state.json")
 
 def load_state():
     try:
-        return json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {"above": {}}
+        return json.loads(STATE_FILE.read_text()) if STATE_FILE.exists() else {}
     except Exception:
-        return {"above": {}}
+        return {}
 
 def save_state(s):
     STATE_FILE.write_text(json.dumps(s))
@@ -65,25 +65,46 @@ def main():
         try:
             mcap, price = get_price()
             print("MCAP:", mcap, "PRICE:", price)
-            for target in THRESHOLDS:
-                key = str(target)
-                was_above = bool(state["above"].get(key, False))
-                is_above = mcap >= target
-                
-                if is_above and not was_above:
-                    msg = (
-                        "🚨 MCAP ALERT\n\n"
-                        f"Market Cap: {fmt_usd(mcap)}\n"
-                        f"Token: {CONTRACT}\n"
-                        f"Target: {fmt_usd(target)}\n"
-                        + (f"Price: ${price:.10g}\n" if price is not None else "")
-                        + "Chain: Robinhood Chain"
-                    )
-                    send_telegram(msg)
-                    
-                state["above"][key] = is_above
-            save_state(state)
             
+            # Cari tahu kita ada di kelipatan berapa (contoh: 1.34M // 100k = 13)
+            current_level = int(mcap // STEP)
+            last_level = state.get("last_level")
+            
+            if last_level is None:
+                # Saat bot baru dinyalakan, save level sekarang tanpa ngirim notif spam
+                state["last_level"] = current_level
+                save_state(state)
+                
+            elif current_level > last_level:
+                # Mcap naik nembus kelipatan 100k
+                crossed_value = current_level * STEP
+                msg = (
+                    "📈 MCAP NAIK!\n\n"
+                    f"Market Cap: {fmt_usd(mcap)}\n"
+                    f"Token: {CONTRACT}\n"
+                    f"Level Tembus: {fmt_usd(crossed_value)}\n"
+                    + (f"Price: ${price:.10g}\n" if price is not None else "")
+                    + "Chain: Robinhood Chain"
+                )
+                send_telegram(msg)
+                state["last_level"] = current_level
+                save_state(state)
+                
+            elif current_level < last_level:
+                # Mcap turun nembus kelipatan 100k (hitungan level turun jadi ditambah 1 untuk cari angka yang baru saja jebol)
+                crossed_value = (current_level + 1) * STEP
+                msg = (
+                    "📉 MCAP TURUN!\n\n"
+                    f"Market Cap: {fmt_usd(mcap)}\n"
+                    f"Token: {CONTRACT}\n"
+                    f"Level Tembus: {fmt_usd(crossed_value)}\n"
+                    + (f"Price: ${price:.10g}\n" if price is not None else "")
+                    + "Chain: Robinhood Chain"
+                )
+                send_telegram(msg)
+                state["last_level"] = current_level
+                save_state(state)
+                
         except Exception as e:
             print("ERROR:", repr(e))
             
@@ -91,4 +112,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
