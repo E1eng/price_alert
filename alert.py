@@ -1,10 +1,10 @@
-import os, time, json
+aimport os, time, json
 from decimal import Decimal
 from pathlib import Path
 import requests
 
-TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+TOKEN = os.environ["8852475575:AAGt46XKv-hvtr9v6OQEm333cnvYCW73_ZM"]
+CHAT_ID = os.environ["8852475575"]
 CONTRACT = os.environ.get("TOKEN_ADDRESS", "0x63ee90921eac3c3f87961c17556bb3ebdf2490a9").lower()
 THRESHOLDS = [Decimal(x.strip()) for x in os.environ.get("MCAP_THRESHOLDS", "5000000,10000000,20000000").split(",") if x.strip()]
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "30"))
