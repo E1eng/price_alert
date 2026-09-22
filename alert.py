@@ -13,7 +13,6 @@ CONTRACT = os.environ.get("TOKEN_ADDRESS", "0x63ee90921eac3c3f87961c17556bb3ebdf
 THRESHOLDS = [Decimal(str(x)) for x in range(800_000, 10_000_000 + 1, 100_000)]
 
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "30"))
-RUN_SECONDS = int(os.environ.get("RUN_SECONDS", "270"))
 
 API = f"https://api.ponsapi.dev/v1/tokens/{CONTRACT}/price"
 STATE_FILE = Path("state.json")
@@ -53,10 +52,11 @@ def fmt_usd(x):
 
 def main():
     state = load_state()
-    started = time.time()
     
-    # Akan berhenti jalan setelah RUN_SECONDS (default 270 detik / 4.5 menit)
-    while time.time() - started < RUN_SECONDS:
+    print("Bot berjalan 24/7. Tekan Ctrl+C untuk berhenti.")
+    
+    # Loop abadi buat VPS (Jalan terus tanpa batas waktu)
+    while True:
         try:
             mcap, price = get_price()
             print("MCAP:", mcap, "PRICE:", price)
