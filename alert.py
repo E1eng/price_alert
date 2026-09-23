@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 
 TOKEN = "8852475575:AAGt46XKv-hvtr9v6OQEm333cnvYCW73_ZM" 
-CHAT_ID = "8852475575"
+CHAT_ID = "5055642879"
 CONTRACT = os.environ.get("TOKEN_ADDRESS", "0x63ee90921eac3c3f87961c17556bb3ebdf2490a9").lower()
 
 STEP = Decimal("100000") # Kelipatan 100k
